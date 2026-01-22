@@ -1,0 +1,151 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Delete Product: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Delete Product</h1>
+    <a href="{% url 'admin:product_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Products
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Are you sure you want to delete this product?</h6>
+                    <p class="mb-0">This action cannot be undone. All data associated with this product will be permanently removed.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <h4>{{ product.name }}</h4>
+                        <p class="text-muted">{{ product.slug }}</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Category:</strong> {{ product.category.name }}</p>
+                                <p><strong>Price:</strong> ${{ product.price }}</p>
+                                <p><strong>Stock:</strong> {{ product.stock }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> 
+                                    {% if product.available %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Created:</strong> {{ product.created_at|date:"M d, Y" }}</p>
+                                <p><strong>Orders:</strong> {{ product.order_count }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Description:</h6>
+                            <p class="text-muted">{{ product.description|truncatewords:30 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">The following will be deleted:</h6>
+                    <ul class="mb-0">
+                        <li>Product information and images</li>
+                        <li>Order items containing this product</li>
+                        <li>Wishlist items containing this product</li>
+                        <li>Product statistics and history</li>
+                    </ul>
+                </div>
+
+                <form method="post" class="d-flex justify-content-between">
+                    {% csrf_token %}
+                    <a href="{% url 'admin:product_detail' product.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Product Permanently
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Alternative Actions</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Instead of deleting, consider these alternatives:</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:product_edit' product.id %}" class="btn btn-outline-warning">
+                        <i class="fas fa-edit me-2"></i>Edit Product
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="setOutOfStock()">
+                        <i class="fas fa-times-circle me-2"></i>Set Out of Stock
+                    </button>
+                    <button class="btn btn-outline-info" onclick="duplicateProduct()">
+                        <i class="fas fa-copy me-2"></i>Duplicate Product
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Impact Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Active Orders:</span>
+                    <strong class="text-warning">{{ product.active_orders }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Wishlist Items:</span>
+                    <strong>{{ product.wishlist_count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Revenue:</span>
+                    <strong>${{ product.total_revenue }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Customer Impact:</span>
+                    <strong class="text-danger">High</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setOutOfStock() {
+    if (confirm('Set this product as out of stock instead of deleting?')) {
+        window.location.href = `/admin/product/{{ product.id }}/set-out-of-stock/`;
+    }
+}
+
+function duplicateProduct() {
+    if (confirm('Create a duplicate of this product?')) {
+        window.location.href = `/admin/product/{{ product.id }}/duplicate/`;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Users</h1>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-success" onclick="exportUsers()">
+            <i class="fas fa-download me-2"></i>Export Users
+        </button>
+        <a href="/admin/auth/user/add/" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New User
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Search users..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="staff" {% if request.GET.status == 'staff' %}selected{% endif %}>Staff</option>
+                    <option value="superuser" {% if request.GET.status == 'superuser' %}selected{% endif %}>Superuser</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="date_joined" class="form-select">
+                    <option value="">All Time</option>
+                    <option value="today" {% if request.GET.date_joined == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if request.GET.date_joined == 'week' %}selected{% endif %}>This Week</option>
+                    <option value="month" {% if request.GET.date_joined == 'month' %}selected{% endif %}>This Month</option>
+                    <option value="year" {% if request.GET.date_joined == 'year' %}selected{% endif %}>This Year</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="orders" class="form-select">
+                    <option value="">All Users</option>
+                    <option value="with_orders" {% if request.GET.orders == 'with_orders' %}selected{% endif %}>With Orders</option>
+                    <option value="without_orders" {% if request.GET.orders == 'without_orders' %}selected{% endif %}>Without Orders</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-body">
+        {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Orders</th>
+                            <th>Total Spent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.profile.profile_image %}
+                                            <img src="{{ user.profile.profile_image.url }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" alt="{{ user.username }}">
+                                        {% else %}
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <span class="text-muted small">{{ user.username.0|upper }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ user.username }}</strong><br>
+                                            <small class="text-muted">{{ user.get_full_name|default:user.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ user.order_count }}</span>
+                                </td>
+                                <td><strong>${{ user.total_spent }}</strong></td>
+                                <td>
+                                    {% if user.is_superuser %}
+                                        <span class="badge bg-danger">Superuser</span>
+                                    {% elif user.is_staff %}
+                                        <span class="badge bg-warning">Staff</span>
+                                    {% elif user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/admin/auth/user/{{ user.id }}/change/" class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'admin:user_detail' user.id %}" class="btn btn-outline-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-success" onclick="sendEmail({{ user.id }})">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                        {% if user.is_active %}
+                                            <button class="btn btn-outline-warning" onclick="toggleUserStatus({{ user.id }}, false)">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-outline-success" onclick="toggleUserStatus({{ user.id }}, true)">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <h4>No users found</h4>
+                <p class="text-muted">No users match your current filters</p>
+                <a href="{% url 'admin:user_list' %}" class="btn btn-primary">Clear Filters</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User Stats -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ total_users }}</h3>
+                <p class="mb-0">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ active_users }}</h3>
+                <p class="mb-0">Active Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ new_users_today }}</h3>
+                <p class="mb-0">New Today</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ users_with_orders }}</h3>
+                <p class="mb-0">Customers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    if (confirm(`Are you sure you want to ${action} this user?`)) {
+        fetch(`/admin/users/${userId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ activate: activate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating user status');
+            }
+        });
+    }
+}
+
+function sendEmail(userId) {
+    if (confirm('Send email to this user?')) {
+        fetch(`/admin/users/${userId}/send-email/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email sent successfully!');
+            } else {
+                alert('Error sending email');
+            }
+        });
+    }
+}
+
+function exportUsers() {
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = `/admin/users/export/?${params.toString()}`;
+}
+</script>
+{% endblock %}
