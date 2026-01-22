@@ -1,0 +1,140 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Delete FAQ: {{ faq.question }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Delete FAQ</h1>
+    <a href="{% url 'admin:faq_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to FAQs
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Are you sure you want to delete this FAQ?</h6>
+                    <p class="mb-0">This action cannot be undone. All data associated with this FAQ will be permanently removed.</p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>{{ faq.question }}</h5>
+                        <p class="text-muted">{{ faq.answer|truncatewords:30 }}</p>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p><strong>Category:</strong> {{ faq.category.name }}</p>
+                                <p><strong>Language:</strong> {{ faq.get_language_display }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> 
+                                    {% if faq.is_published %}
+                                        <span class="badge bg-success">Published</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Draft</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Views:</strong> {{ faq.view_count }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <p><strong>Created:</strong> {{ faq.created_at|date:"M d, Y H:i" }}</p>
+                            <p><strong>Updated:</strong> {{ faq.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">The following will be deleted:</h6>
+                    <ul class="mb-0">
+                        <li>FAQ question and answer</li>
+                        <li>View statistics</li>
+                        <li>Category association</li>
+                        <li>All related data</li>
+                    </ul>
+                </div>
+
+                <form method="post" class="d-flex justify-content-between">
+                    {% csrf_token %}
+                    <a href="{% url 'admin:faq_detail' faq.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete FAQ Permanently
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Alternative Actions</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Instead of deleting, consider these alternatives:</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:faq_edit' faq.id %}" class="btn btn-outline-warning">
+                        <i class="fas fa-edit me-2"></i>Edit FAQ
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="setDraft()">
+                        <i class="fas fa-eye-slash me-2"></i>Set as Draft
+                    </button>
+                    <button class="btn btn-outline-info" onclick="duplicateFaq()">
+                        <i class="fas fa-copy me-2"></i>Duplicate FAQ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Impact Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Views:</span>
+                    <strong>{{ faq.view_count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Category:</span>
+                    <strong>{{ faq.category.name }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Language:</span>
+                    <strong>{{ faq.get_language_display }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Customer Impact:</span>
+                    <strong class="text-danger">Medium</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setDraft() {
+    if (confirm('Set this FAQ as draft instead of deleting?')) {
+        window.location.href = `/admin/faq/{{ faq.id }}/set-draft/`;
+    }
+}
+
+function duplicateFaq() {
+    if (confirm('Create a duplicate of this FAQ?')) {
+        window.location.href = `/admin/faq/{{ faq.id }}/duplicate/`;
+    }
+}
+</script>
+{% endblock %}
