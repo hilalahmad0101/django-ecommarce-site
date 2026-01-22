@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Phone:</strong> {{ profile.phone|default:"Not provided" }}</p>
+                <p><strong>Address:</strong> {{ profile.address|default:"Not provided" }}</p>
+                <p><strong>City:</strong> {{ profile.city|default:"Not provided" }}</p>
+                <p><strong>Postal Code:</strong> {{ profile.postal_code|default:"Not provided" }}</p>
+                <p><strong>Country:</strong> {{ profile.country|default:"Not provided" }}</p>
+                <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary btn-sm">Edit Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>My Addresses</h5>
+                <a href="{% url 'accounts:add_address' %}" class="btn btn-primary btn-sm">Add Address</a>
+            </div>
+            <div class="card-body">
+                {% if addresses %}
+                    {% for address in addresses %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>{{ address.address_type|title }} Address
+                                    {% if address.is_default %}
+                                        <span class="badge bg-success">Default</span>
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-0">{{ address.address }}</p>
+                                <p class="mb-0">{{ address.city }}, {{ address.postal_code }}</p>
+                                <p class="mb-0">{{ address.country }}</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'accounts:edit_address' address.id %}" class="btn btn-outline-primary btn-sm">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No addresses added yet. <a href="{% url 'accounts:add_address' %}">Add your first address</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

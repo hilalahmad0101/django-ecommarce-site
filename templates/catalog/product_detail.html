@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'catalog:category' product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <span class="text-muted">No Image Available</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1>{{ product.name }}</h1>
+            <div class="mb-3">
+                <span class="category-badge">{{ product.category.name }}</span>
+            </div>
+            
+            <div class="mb-3">
+                <h2 class="price">${{ product.price }}</h2>
+                {% if product.stock <= 5 %}
+                    <span class="stock-low">Only {{ product.stock }} left in stock!</span>
+                {% else %}
+                    <span class="stock-good">In Stock ({{ product.stock }} available)</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Add to Cart Form -->
+            <form action="{% url 'cart:add' product.id %}" method="post" class="mb-4">
+                {% csrf_token %}
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <label for="quantity" class="form-label">Quantity:</label>
+                        <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" max="{{ product.stock }}">
+                    </div>
+                    <div class="col-md-8">
+                        <button type="submit" class="btn btn-primary btn-lg" {% if not product.available %}disabled{% endif %}>
+                            {% if product.available %}
+                                Add to Cart
+                            {% else %}
+                                Out of Stock
+                            {% endif %}
+                        </button>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'wishlist:add' product.id %}" class="btn btn-outline-danger btn-lg ms-2">
+                                ❤️ Add to Wishlist
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+
+            <!-- Product Info -->
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Category:</strong> {{ product.category.name }}</p>
+                    <p><strong>SKU:</strong> #{{ product.id }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Added:</strong> {{ product.created_at|date:"M d, Y" }}</p>
+                    <p><strong>Updated:</strong> {{ product.updated_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products (you can add this later) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Similar Products</h3>
+            <p class="text-muted">More products from {{ product.category.name }}</p>
+            <!-- Add related products here -->
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+</style>
+{% endblock %}
